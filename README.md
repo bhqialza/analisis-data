@@ -16,7 +16,7 @@
 
 ---
 
-## ✅ **Cara Menjalankan Dashboard**
+## ✅ **Cara Menjalankan Dashboard
 ### Instalasi Dependensi**
 Jalankan perintah ini untuk menginstal semua library yang dibutuhkan:
 ```bash
@@ -24,7 +24,7 @@ pip install -r requirements.txt
 
 ````
 
-### Run Dashboard**
+### Run Dashboard
 ```bash
 streamlit run dashboard/dashboard.py
 
