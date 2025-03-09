@@ -16,8 +16,8 @@
 
 ---
 
-## ✅ **Cara Menjalankan Dashboard
-### Instalasi Dependensi**
+## ✅ Cara Menjalankan Dashboard
+### Instalasi Dependensi
 Jalankan perintah ini untuk menginstal semua library yang dibutuhkan:
 ```bash
 pip install -r requirements.txt
