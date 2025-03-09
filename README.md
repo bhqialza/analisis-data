@@ -25,4 +25,7 @@ pip install -r requirements.txt
 ````
 
 ### Run Dashboard**
+```bash
 streamlit run dashboard/dashboard.py
+
+````
