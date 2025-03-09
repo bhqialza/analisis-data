@@ -13,3 +13,16 @@
 ✅ **Tabel Data Mentah** → Menampilkan data asli yang digunakan dalam analisis.  
 
 ---
+
+---
+
+## ✅ **Cara Menjalankan Dashboard**
+### Instalasi Dependensi**
+Jalankan perintah ini untuk menginstal semua library yang dibutuhkan:
+```bash
+pip install -r requirements.txt
+
+````
+
+### Run Dashboard**
+streamlit run dashboard/dashboard.py
