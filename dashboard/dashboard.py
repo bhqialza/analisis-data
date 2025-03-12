@@ -1,78 +1,81 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
+import matplotlib.pyplot as plt
+import seaborn as sns
+import locale
 
-# Konfigurasi halaman Streamlit
+# Konfigurasi Locale untuk Rupiah
+locale.setlocale(locale.LC_ALL, 'id_ID.utf8')  # Format Indonesia
+
+# Konfigurasi Halaman
 st.set_page_config(page_title="E-Commerce Dashboard", layout="wide")
 
-# Tambahkan sidebar dengan logo & informasi tambahan
-st.sidebar.image("https://cdn-icons-png.flaticon.com/512/1177/1177568.png", width=100)
-st.sidebar.title("📊 E-Commerce Dashboard")
-st.sidebar.write("Dibuat oleh **M. Baihaqi Alza**")
-st.sidebar.markdown("---")
+# Load Data dengan Cache
+@st.cache_data
+def load_data():
+    df = pd.read_csv("dashboard/main_data.csv", parse_dates=["order_purchase_timestamp"])
+    return df
 
-# Load Data
-df = pd.read_csv("dashboard/main_data.csv")
+df = load_data()
 
-# Sidebar Filter
-st.sidebar.header("🔍 Filter Data")
-status_filter = st.sidebar.multiselect(
-    "Pilih Status Pesanan", 
-    options=df["order_status"].unique(), 
-    default=df["order_status"].unique()
-)
+# Header Dashboard
+st.title("📊 E-Commerce Sales Dashboard")
+st.markdown("---")
 
-# Terapkan Filter
-df_filtered = df[df["order_status"].isin(status_filter)]
+# Sidebar - Filter Data
+st.sidebar.header("📌 Filter Data")
 
-#  Header Dashboard**
-st.markdown("<h1 style='text-align: center; color: #FF5733;'>📦 E-Commerce Dashboard</h1>", unsafe_allow_html=True)
-st.markdown("<h3 style='text-align: center; color: gray;'>Analisis Pesanan & Pelanggan</h3>", unsafe_allow_html=True)
+# Filter Tanggal
+start_date = st.sidebar.date_input("Start Date", df["order_purchase_timestamp"].min())
+end_date = st.sidebar.date_input("End Date", df["order_purchase_timestamp"].max())
 
-#  Ringkasan Data dalam Card Metrics**
+df_filtered = df[(df["order_purchase_timestamp"] >= pd.to_datetime(start_date)) & 
+                 (df["order_purchase_timestamp"] <= pd.to_datetime(end_date))]
+
+# Ringkasan Penjualan
+total_orders = df_filtered["order_id"].nunique()
+total_customers = df_filtered["customer_unique_id"].nunique()
+total_sales = df_filtered["payment_value"].sum()
+
 col1, col2, col3 = st.columns(3)
-col1.metric("📌 Total Pesanan", f"{len(df_filtered):,}")
-col2.metric("⏳ Rata-rata Waktu Pengiriman", f"{df_filtered['delivery_time'].mean():.2f} hari")
-col3.metric("✅ Pesanan Terkirim Tepat Waktu", f"{df_filtered['delivery_time'][df_filtered['delivery_time'] <= df_filtered['delivery_time'].median()].count()}")
+col1.metric("🛒 Total Orders", total_orders)
+col2.metric("👥 Unique Customers", total_customers)
+col3.metric("💰 Total Sales", locale.currency(total_sales, grouping=True))
 
+# Produk Paling Laris
+st.subheader("🔥 Produk Paling Banyak Dibeli")
+top_products = df_filtered.groupby("product_category_name_english")["order_item_id"].count().sort_values(ascending=False).head(10)
+
+fig, ax = plt.subplots(figsize=(10, 5))
+sns.barplot(y=top_products.index, x=top_products.values, palette="Blues_r", ax=ax)
+ax.set_xlabel("Jumlah Pembelian")
+ax.set_ylabel("Kategori Produk")
+st.pyplot(fig)
+
+# Tren Pembelian dalam 6 Bulan Terakhir
+st.subheader("📈 Tren Penjualan")
+df_filtered["month"] = df_filtered["order_purchase_timestamp"].dt.to_period("M").astype(str)  # Konversi ke string
+monthly_sales = df_filtered.groupby("month")["order_id"].count().reset_index()
+
+fig, ax = plt.subplots(figsize=(12, 6))
+sns.lineplot(data=monthly_sales, x="month", y="order_id", marker="o", ax=ax)
+ax.set_xlabel("Bulan")
+ax.set_ylabel("Jumlah Pesanan")
+ax.set_title("Tren Penjualan")
+plt.xticks(rotation=45)  # Supaya lebih rapi jika banyak bulan
+st.pyplot(fig)
+
+# Kota dengan Pelanggan Terbanyak
+st.subheader("🏙️ Kota dengan Pelanggan Terbanyak")
+num_cities = st.sidebar.slider("Tampilkan Berapa Kota Teratas?", 5, 20, 10)  # Pilihan jumlah kota
+top_cities = df_filtered["customer_city"].value_counts().head(num_cities)
+
+fig, ax = plt.subplots(figsize=(10, 5))
+sns.barplot(y=top_cities.index, x=top_cities.values, palette="coolwarm", ax=ax)
+ax.set_xlabel("Jumlah Pelanggan")
+ax.set_ylabel("Kota")
+st.pyplot(fig)
+
+# Footer
 st.markdown("---")
-
-#  Visualisasi Status Pesanan**
-st.subheader("📦 Distribusi Status Pesanan")
-fig_status = px.pie(df_filtered, names="order_status", title="Distribusi Status Pesanan", color_discrete_sequence=px.colors.sequential.RdBu)
-st.plotly_chart(fig_status, use_container_width=True)
-
-#  Visualisasi Waktu Pengiriman**
-st.subheader("⏳ Distribusi Waktu Pengiriman")
-fig_delivery = px.histogram(df_filtered, x="delivery_time", nbins=30, title="Distribusi Waktu Pengiriman", color_discrete_sequence=["#FF5733"])
-st.plotly_chart(fig_delivery, use_container_width=True)
-
-#  Tren Pesanan per Bulan**
-st.subheader("📅 Tren Jumlah Pesanan per Bulan")
-df_filtered["order_month"] = pd.to_datetime(df_filtered["order_purchase_timestamp"]).dt.strftime('%Y-%m')
-orders_per_month = df_filtered.groupby("order_month").size().reset_index(name="count")
-
-fig_trend = px.line(orders_per_month, x="order_month", y="count", markers=True, title="Tren Jumlah Pesanan per Bulan", color_discrete_sequence=["#36A2EB"])
-st.plotly_chart(fig_trend, use_container_width=True)
-
-#  Distribusi Pelanggan Berdasarkan Kota**
-st.subheader("🌍 Sebaran Pelanggan per Kota")
-top_cities = df_filtered["customer_city"].value_counts().head(10)
-fig_cities = px.bar(
-    x=top_cities.index, 
-    y=top_cities.values, 
-    labels={"x": "Kota", "y": "Jumlah Pesanan"},
-    title="10 Kota dengan Jumlah Pesanan Terbanyak",
-    color_discrete_sequence=["#2ECC71"]
-)
-st.plotly_chart(fig_cities, use_container_width=True)
-
-#  Menampilkan Data dalam Tabel**
-with st.expander("📋 Lihat Data Mentah"):
-    st.write(df_filtered.head(20))
-
-st.markdown("---")
-st.write("---")
-st.write("© 2025 M. Baihaqi Alza. All rights reserved.")
-# st.markdown("<h4 style='text-align: center;'>🚀 Dibuat oleh <span style='color:#FF5733;'>M. Baihaqi Alza</span></h4>", unsafe_allow_html=True)
-# st.markdown("<h5 style='text-align: center;'>📅 Tahun 2025 | 🌎 E-Commerce Data Analysis</h5>", unsafe_allow_html=True)
+st.markdown("**Copyright © 2025 M. Baihaqi Alza**")
