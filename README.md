@@ -1,39 +1,25 @@
-<<<<<<< HEAD
+# 📊 Dicoding E-Commerce Dashboard
 
-# 📊 E-Commerce Data Analysis Dashboard
-
-**E-Commerce Data Analysis Dashboard** adalah proyek analisis data yang bertujuan untuk menganalisis pola pesanan, distribusi pelanggan, dan performa pengiriman menggunakan **Python, Pandas, Streamlit, dan Plotly**.
-
-## 📌 Fitur Dashboard
-
-✅ **Ringkasan Data** → Total pesanan, rata-rata waktu pengiriman, dan pesanan yang terkirim tepat waktu.  
-✅ **Filter Status Pesanan** → Memilih status pesanan tertentu untuk dianalisis.  
-✅ **Visualisasi Data**
-
-- **Pie Chart** → Distribusi status pesanan.
-- **Histogram** → Distribusi waktu pengiriman.
-- **Line Chart** → Tren jumlah pesanan per bulan.
-- **Bar Chart** → Kota dengan jumlah pesanan terbanyak.  
-  ✅ **Tabel Data Mentah** → Menampilkan data asli yang digunakan dalam analisis.
-
----
-
----
-
-## ✅ Cara Menjalankan Dashboard
-
-### Instalasi Dependensi
-
-Jalankan perintah ini untuk menginstal semua library yang dibutuhkan:
+## Setup Environment - Anaconda
 
 ```bash
+conda create --name main-ds python=3.9
+conda activate main-ds
 pip install -r requirements.txt
-
 ```
 
-### Run Dashboard
+## Setup Environment - Terminal
+
+```bash
+mkdir proyek_analisis_data
+cd proyek_analisis_data
+pipenv install
+pipenv shell
+pip install -r requirements.txt
+```
+
+## Run steamlit app
 
 ```bash
 streamlit run dashboard/dashboard.py
-
 ```
